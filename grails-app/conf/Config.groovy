@@ -2,7 +2,7 @@ import org.apache.commons.lang.SystemUtils
 import org.slf4j.LoggerFactory
 
 grails.plugins.squeakyclean.cleandirs = true
-def rootLoader = Thread.currentThread().contextClassLoader.rootLoader
+def rootLoader = GrailsWebApplicationContext.class.classLoader
 
 def driverDirectory = new File("${SystemUtils.USER_HOME}/.grails/drivers")
 if (driverDirectory.exists() && driverDirectory.isDirectory()) {
