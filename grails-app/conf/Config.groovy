@@ -1,20 +1,29 @@
 import org.apache.commons.lang.SystemUtils
+import org.codehaus.groovy.grails.commons.spring.GrailsWebApplicationContext
 import org.slf4j.LoggerFactory
 
-grails.plugins.squeakyclean.cleandirs = true
-def rootLoader = Thread.currentThread().contextClassLoader.rootLoader
+def rootLoader = rootLoader = GrailsWebApplicationContext.class.classLoader
 
 def driverDirectory = new File("${SystemUtils.USER_HOME}/.grails/drivers")
-if (driverDirectory.exists() && driverDirectory.isDirectory()) {
-    if (rootLoader) {
-        driverDirectory.eachFile {
-            if (it.name.endsWith(".jar")) {
-                def url = it.toURI().toURL()
-                LoggerFactory.getLogger("config.Config").info "adding driver ${url}" as String
-                rootLoader.addURL(url)
-            }
+log.info "searching $driverDirectory for drivers"
+
+def existsAndIsDirectory = driverDirectory.exists() && driverDirectory.isDirectory()
+
+if (existsAndIsDirectory) {
+    log.info "$driverDirectory exists, checking for drivers"
+    driverDirectory.listFiles().each {
+        if (it.name.endsWith(".jar")) {
+            def url = it.toURI().toURL()
+            LoggerFactory.getLogger("config.Config").info "adding driver ${url}" as String
+            rootLoader.addURL(url)
+        }
+        else {
+            log.info "$it is not a driver"
         }
     }
+}
+else {
+    log.info "$driverDirectory does not exists or is not a directory"
 }
 
 grails.converters.default.pretty.print = true
@@ -48,7 +57,7 @@ grails.scaffolding.templates.domainSuffix = 'Instance'
 grails.json.legacy.builder = false
 grails.enable.native2ascii = true
 grails.spring.bean.packages = []
-grails.web.disable.multipart=false
+grails.web.disable.multipart = false
 grails.exceptionresolver.params.exclude = ['password']
 grails.hibernate.cache.queries = false
 
@@ -80,15 +89,20 @@ if (System.properties["${appName}.config.location"]) {
 log4j = {
 
     appenders {
+        def logLocation = "${SystemUtils.USER_HOME}/.metridoc/logs/metridoc"
+        def baseLog = "${logLocation}.log"
+        println "base log stored at $baseLog"
         rollingFile name: "file",
                 maxBackupIndex: 10,
                 maxFileSize: "1MB",
-                file: "${config.metridoc.home}/logs/${config.metridoc.app.name ?: 'metridoc'}.log"
+                file: baseLog
 
+        def stacktraceLog = "${logLocation}-stacktrace.log"
+        println "stacktrace log stored at $stacktraceLog"
         rollingFile name: "stacktrace",
                 maxFileSize: "1MB",
                 maxBackupIndex: 10,
-                file: "${config.metridoc.home}/logs/${config.metridoc.app.name ?: 'metridoc'}-stacktrace.log"
+                file: stacktraceLog
     }
 
 
